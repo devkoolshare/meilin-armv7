@@ -17,6 +17,7 @@ if [ -d "/koolshare" ];then
 else
     systemType=1
     xunyouPath="/jffs"
+    [ -d "/jffs/softcenter" ] && xunyouPath="/jffs/softcenter"
     [ ! -d "/jffs" ] && exit 1
 fi
 
@@ -68,14 +69,33 @@ koolshare_uninstall()
 
 official_uninstall()
 {
-    [ ! -d "/jffs/xunyou" ] && return 1
+    [ ! -d "${xunyouPath}/xunyou" ] && return 1
     #
-    sh /jffs/xunyou/scripts/${MODULE}_config.sh uninstall
+    sh ${xunyouPath}/xunyou/scripts/${MODULE}_config.sh uninstall
     #
+    rm -rf ${xunyouPath}/res/icon-xunyou.png  > /dev/null 2>&1
+    rm -rf ${xunyouPath}/webs/Module_xunyou.asp  > /dev/null 2>&1
     rm -rf /etc/init.d/S90XunYouAcc.sh > /dev/null 2>&1
-    rm -rf /jffs/xunyou/
+    rm -rf ${xunyouPath}/init.d/S90XunYouAcc.sh > /dev/null 2>&1
+    rm -rf ${xunyouPath}/xunyou/ > /dev/null 2>&1
+    #
+    if [ -d "/jffs/softcenter" ];then
+        values=`dbus list xunyou_ | cut -d "=" -f 1`
+        for value in $values
+        do
+            dbus remove $value
+        done
+        #
+        values=`dbus list softcenter_module_xunyou_ | cut -d "=" -f 1`
+        for value in $values
+        do
+            dbus remove $value
+        done
+    fi
     #
     delete_xunyou_cfg
+    #
+    rm -rf ${xunyouPath}/scripts/*xunyou* > /dev/null 2>&1
 }
 
 case ${systemType} in

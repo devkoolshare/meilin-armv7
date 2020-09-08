@@ -2,15 +2,20 @@
 
 source /etc/profile
 
-if [ -d "/koolshare" ];then
+if [ -d "/jffs/.koolshare" ];then
     source /koolshare/scripts/base.sh
     eval `dbus export xunyou`
-    xunyouPath="/koolshare"
+    xunyouPath="/jffs/.koolshare"
     #
     [ "${1}" == "app" ] && dbus set xunyou_enable=1 && xunyou_enable="1"
 else
     xunyou_enable="1"
     xunyouPath="/jffs"
+    #
+    if [ -d "/jffs/softcenter" ];then
+        xunyou_enable=`dbus get xunyou_enable`
+        xunyouPath="/jffs/softcenter"
+    fi
     [ ! -d "/jffs" ] && exit 1
 fi
 
@@ -34,7 +39,6 @@ ProxyProc="xy-proxy"
 DevTypeProc="xy-devInfo"
 UdpPostProc="udp-post"
 logPath="/var/log/xunyou-install.log"
-DnsCfgPath="/jffs/configs/dnsmasq.d"
 DnsConfig="${BasePath}/config/xunyou.conf"
 iptName="XUNYOU"
 iptAccName="XUNYOUACC"
@@ -111,8 +115,12 @@ iptables_rule_cfg()
 set_dnsmasq_config()
 {
     #
+    DnsCfgPath="/jffs/configs/dnsmasq.d"
     ret=`cat /etc/dnsmasq.conf | grep "conf-dir"`
     if [ -n "${ret}" ];then
+        #
+        dPath=`cat /etc/dnsmasq.conf | grep "conf-dir" | awk -F '=' '{print $2}'`
+        [ -n "${dPath}" ] && DnsCfgPath="${dPath}"
         #
         ret=`dbus get dhcp_dns1_x`
         [ -z "${ret}" ] && dbus set dhcp_dns1_x=223.6.6.6
@@ -230,14 +238,16 @@ xunyou_acc_start()
     ulimit -n 2048
     #
     ret=`ps | grep -v grep | grep nvram`
-    [ -n "${ret}" ] && killall nvram
+    [ -n "${ret}" ] && killall nvram >/dev/null 2>&1
     #
-    mv ${RouteLog}* /tmp/  >/dev/null 2>&1
-    mv ${ProxyLog}* /tmp/  >/dev/null 2>&1
+    mv ${RouteLog}* /tmp/ >/dev/null 2>&1
+    mv ${ProxyLog}* /tmp/ >/dev/null 2>&1
     #
     ${BasePath}/bin/${RCtrProc}  --config ${RouteCfg} &
     ${BasePath}/bin/${ProxyProc} --config ${ProxyCfg} &
     ${BasePath}/bin/${DevTypeProc} &
+    #
+    xunyou_acc_install
 }
 
 xunyou_acc_install()
@@ -281,14 +291,14 @@ xunyou_clear_rule()
 xunyou_acc_stop()
 {
     ctrlPid=$(echo -n `ps | grep -v grep | grep -w ${RCtrProc} | awk -F ' ' '{print $1}'`)
-    [ -n "${ctrlPid}" ] && kill -10 ${ctrlPid}
+    [ -n "${ctrlPid}" ] && kill -10 ${ctrlPid} > /dev/null 2>&1
     proxyPid=$(echo -n `ps | grep -v grep | grep -w ${ProxyProc} | awk -F ' ' '{print $1}'`)
-    [ -n "${proxyPid}" ] && kill -9 ${proxyPid}
+    [ -n "${proxyPid}" ] && kill -9 ${proxyPid} > /dev/null 2>&1
     devPid=$(echo -n `ps | grep -v grep | grep -w ${DevTypeProc} | awk -F ' ' '{print $1}'`)
-    [ -n "${proxyPid}" ] && kill -9 ${devPid}
+    [ -n "${proxyPid}" ] && kill -9 ${devPid} > /dev/null 2>&1
     #
     devPid=$(echo -n `ps | grep -v grep | grep -w ${DevTypeProc} | awk -F ' ' '{print $1}'`)
-    [ -n "${proxyPid}" ] && killall ${DevTypeProc}
+    [ -n "${proxyPid}" ] && killall ${DevTypeProc} > /dev/null 2>&1
     #
     xunyou_clear_rule
 }

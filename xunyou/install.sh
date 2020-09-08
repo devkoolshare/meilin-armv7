@@ -38,6 +38,19 @@ else
     [ ! -d "/jffs" ] && systemType=2
 fi
 
+
+set_env_info()
+{
+    dbus set ${MODULE}_version="${VERSION}"
+    dbus set ${MODULE}_title="${title}"
+    dbus set ${MODULE}_enable=1
+    dbus set softcenter_module_${MODULE}_install=1
+    dbus set softcenter_module_${MODULE}_name=${MODULE}
+    dbus set softcenter_module_${MODULE}_version="${VERSION}"
+    dbus set softcenter_module_${MODULE}_title="${title}"
+    dbus set softcenter_module_${MODULE}_description="迅游加速器，支持PC和主机加速。"
+}
+
 koolshare_install()
 {
     [ -e "/koolshare/scripts/uninstall_xunyou.sh" ] && sh /koolshare/scripts/uninstall_xunyou.sh
@@ -51,39 +64,44 @@ koolshare_install()
     cp -rf /tmp/${MODULE}/*      /koolshare/xunyou/
     cp -rf /tmp/${MODULE}/uninstall.sh  /koolshare/scripts/uninstall_xunyou.sh
     #
-    chmod +x /koolshare/xunyou/bin/*
-    chmod +x /koolshare/xunyou/scripts/*
+    chmod -R 777 /koolshare/xunyou/* 
     #
     ln -sf /koolshare/xunyou/scripts/${MODULE}_config.sh /koolshare/init.d/S90XunYouAcc.sh
     ln -sf /koolshare/xunyou/scripts/${MODULE}_config.sh /koolshare/scripts/xunyou_status.sh
     #
-    dbus set ${MODULE}_version="${VERSION}"
-    dbus set ${MODULE}_title="${title}"
-    dbus set softcenter_module_${MODULE}_install=1
-    dbus set softcenter_module_${MODULE}_name=${MODULE}
-    dbus set softcenter_module_${MODULE}_version="${VERSION}"
-    dbus set softcenter_module_${MODULE}_title="${title}"
-    dbus set softcenter_module_${MODULE}_description="迅游加速器，支持PC和主机加速。"
+    set_env_info
     #
     [ "${clientType}" == "1" ] &&  sh /koolshare/xunyou/scripts/${MODULE}_config.sh app
 }
 
 official_install()
 {
-    if [ ! -d "/jffs/xunyou" ];then
-        ret=`mkdir -p /jffs/xunyou`
+    installPath="/jffs/xunyou"
+    [ -d "/jffs/softcenter" ] && installPath="/jffs/softcenter/xunyou"
+    #
+    if [ ! -d "${installPath}" ];then
+        ret=`mkdir -p ${installPath}`
         [ -n "${ret}" ] && echo [`date +"%Y-%m-%d %H:%M:%S"`] "创建安装路径失败！" && return 1
     fi
     #
-    [ -e "/jffs/xunyou/uninstall.sh" ] && sh /jffs/xunyou/uninstall.sh
+    [ -e "${installPath}/uninstall.sh" ] && sh ${installPath}/uninstall.sh
     #
     rm -rf /etc/init.d/S90XunYouAcc.sh > /dev/null 2>&1
-    cp -rf /tmp/${MODULE}/*      /jffs/xunyou/
+    cp -rf /tmp/${MODULE}/*      ${installPath}/
     #
-    chmod +x /jffs/xunyou/bin/*
-    chmod +x /jffs/xunyou/scripts/*
-    ln -sf /jffs/xunyou/scripts/${MODULE}_config.sh /etc/init.d/S90XunYouAcc.sh > /dev/null 2>&1
-    sh /jffs/xunyou/scripts/${MODULE}_config.sh app
+    if [ -d "/jffs/softcenter/" ];then
+        cp -rf ${installPath}/webs/* ${installPath}/../webs/
+        cp -rf ${installPath}/res/* ${installPath}/../res/
+        ln -sf ${installPath}/scripts/xunyou_config.sh  ${installPath}/../scripts/xunyou_status.sh
+        ln -sf ${installPath}/uninstall.sh  ${installPath}/../scripts/uninstall_xunyou.sh
+        ln -sf ${installPath}/scripts/xunyou_config.sh ${installPath}/../init.d/S90XunYouAcc.sh > /dev/null 2>&1
+        #
+        set_env_info
+    fi
+    #
+    chmod -R 777 ${installPath}/*
+    ln -sf ${installPath}/scripts/${MODULE}_config.sh /etc/init.d/S90XunYouAcc.sh > /dev/null 2>&1
+    sh ${installPath}/scripts/${MODULE}_config.sh app
 }
 
 case ${systemType} in

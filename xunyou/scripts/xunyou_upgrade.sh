@@ -16,6 +16,7 @@ if [ -d "/koolshare" ];then
 else
     xunyouPath="/jffs"
     systemType=1
+    [ -d "/jffs/softcenter" ] && xunyouPath="/jffs/softcenter"
     [ ! -d "/jffs" ] && exit 1
 fi
 

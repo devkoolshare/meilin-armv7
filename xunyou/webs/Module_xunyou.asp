@@ -105,17 +105,17 @@
 		}
 
 		function reload_Soft_Center() {
-			var url = "/Module_Softcenter.asp";
+            var url = "/Main_Soft_center.asp";
 
-			if(buildno == 380){
-				url = "/Main_Soft_center.asp";
-			}
+            if(buildno == 384){
+                url = "/Module_Softcenter.asp";
+            }
 
-			location.href = url;
-		}
+            location.href = url;
+        }
 
-		var enable_ss = '<% nvram_get(" enable_ss "); %>';
-		var enable_soft = '<% nvram_get(" enable_soft "); %>';
+        var enable_ss = '<% nvram_get(" enable_ss "); %>';
+        var enable_soft = '<% nvram_get(" enable_soft "); %>';
 
 		function menu_hook(title, tab) {
 			tabtitle[tabtitle.length - 1] = new Array("", "迅游加速器");
