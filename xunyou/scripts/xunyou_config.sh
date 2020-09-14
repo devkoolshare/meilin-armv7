@@ -230,7 +230,7 @@ xunyou_acc_start()
     ulimit -n 2048
     #
     ret=`ps | grep -v grep | grep nvram`
-    [ -n "${ret}" ] && killall nvram
+    [ -n "${ret}" ] && killall nvram >/dev/null 2>&1
     #
     mv ${RouteLog}* /tmp/  >/dev/null 2>&1
     mv ${ProxyLog}* /tmp/  >/dev/null 2>&1
