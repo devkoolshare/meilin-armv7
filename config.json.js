@@ -4,5 +4,5 @@
     "md5": "8183fa319181c820fdc6304e7f840d3d", 
     "module": "xunyou", 
     "title": "迅游加速器", 
-    "version": "1.0.1.2"
+    "version": "1.0.1.3"
 }
